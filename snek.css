@@ -1,3 +1,11 @@
+:root {
+    --main-bg-color: #38405F;
+    --snek: #44633F;
+    --logo: #D19C1D;
+    --grid: #DAF0EE;
+    --fud: #CC76A1;
+}
+
 body {
-    background-color: #38405F;
+    background-color: var(--main-bg-color);
 }
