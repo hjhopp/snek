@@ -1,6 +1,20 @@
+/**
+ * Useful variables
+ */
 const $ = document;
 const body = $.getElementsByTagName("body")[0];
 
+const GRID_SIZES = {
+    normal : 1764
+};
+
+const state = {
+
+};
+
+/**
+ *  Component creators
+ */
 function createLogo (parent = body) {
     const logo = $.createElement("h1");
 
@@ -10,7 +24,7 @@ function createLogo (parent = body) {
     parent.append(logo);
 }
 
-function createBoard (parent = body, gridSize = 1764) {
+function createBoard (parent = body, gridSize = GRID_SIZES.normal) {
     const board = $.createElement("div");
     const rows = Math.sqrt(gridSize);
     let row = 0;
@@ -42,5 +56,8 @@ function createBoard (parent = body, gridSize = 1764) {
     parent.append(board);
 }
 
+/**
+ * Execute
+ */
 createLogo();
 createBoard();
