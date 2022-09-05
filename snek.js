@@ -1,9 +1,6 @@
 /**
- * Useful variables
+ * Constants
  */
-const $ = document;
-const body = $.getElementsByTagName("body")[0];
-
 const GRID_SIZES = {
     normal : 1764
 };
@@ -13,30 +10,11 @@ const TYPES = {
     fud  : "fud"
 };
 
-const state = {
-    boardSize : GRID_SIZES.normal,
-    rows      : Math.sqrt(this.boardSize),
+const STARTING_SNEK_SIZE = 4;
 
-    snek : {
-        length : 4,
-        nodes  : [],
-        node   : {
-            isHead   : false,
-            isTail   : false,
-            posX     : null,
-            posY     : null,
-            nextNode : null,
-            prevNode : null
-        }
-    },
-
-    fud : {
-        lastIdx : null
-    },
-
-    cells : []
-};
-
+/**
+ * Prototypes
+ */
 class Node {
     constructor ({ x, y }) {
         this.x = x;
@@ -47,11 +25,14 @@ class Node {
 }
 
 class LinkedList {
-    constructor () {
-        const newNode = new Node({ x : state.rows / 2, y : state.rows / 2 });
+    constructor (boardSize) {
+        const smallerBoard = Math.sqrt(boardSize / 3);
+        const coord = Math.floor(Math.random() * smallerBoard);
+        const newNode = new Node({ x : coord, y : coord });
 
         this.head = newNode;
-        this.tail = newNode;
+        this.tail = null;
+        this.length = 1;
     }
 
     #getNextCoord (node) {
@@ -90,22 +71,48 @@ class LinkedList {
     }
 
     addToTail () {
-        const firstAddition = !this.tail.previous;
         const formerTail = this.tail;
 
-        if (firstAddition) {
+        if (!formerTail) {
             const newNode = new Node({ x : this.head.x, y : this.head.y + 1 });
 
             this.head.next = newNode;
             this.tail = newNode;
             this.tail.previous = this.head;
         } else {
-            const newNode = new Node({});
+            const newNode = new Node(this.#getNextCoord(formerTail));
 
+            formerTail.next = newNode;
             newNode.previous = formerTail;
+
+            this.tail = newNode;
         }
+
+        this.length++;
     }
 }
+
+/**
+ * Useful variables
+ */
+const $ = document;
+const body = $.getElementsByTagName("body")[0];
+
+/**
+ * State
+ */
+// Sealing so I'm forced to add properties I want on state here and not buried elsewhere
+const state = Object.seal({
+    boardSize : GRID_SIZES.normal,
+
+    snek : null,
+
+    fud : {
+        lastIdx : null
+    },
+
+    cells : []
+});
 
 /**
  * Helper functions
@@ -115,8 +122,15 @@ class LinkedList {
  * @param {number} idx - cell index
  * @param {string} type - fud | snek
  */
-function toggleCellActivity (idx, type) {
-    const cell = document.querySelector(`[data-idx='${idx}']`);
+function toggleCellActivity ({ idx, x, y, type }) {
+    const cell = idx ?
+        document.querySelector(`[data-idx='${idx}']`) :
+        document.querySelector(`[data-x='${x}'][data-y='${y}']`);
+
+    if (!idx) {
+        idx = cell.attributes["data-idx"].value;
+    }
+
     const toggleTo = !state.cells[idx].active;
     const otherType = type === TYPES.fud ? TYPES.snek : TYPES.fud;
 
@@ -128,28 +142,58 @@ function toggleCellActivity (idx, type) {
     state.cells[idx][otherType] = false;
 }
 
-function placeFud () {
+function getFudIdx () {
     const idx = Math.floor(Math.random() * state.boardSize);
+
+    if (state.cells[idx].active) {
+        return getFudIdx();
+    }
+
+    return idx;
+}
+
+function placeFud () {
+    const idx = getFudIdx();
+
+    // keep generating indeces until a valid one is found
+    // do {
+    //     idx = Math.floor(Math.random() * state.boardSize)
+    // } while (typeof idx === "number" && !state.cells[idx].active);
 
     if (state.fud.lastIdx) {
         // turn off old cell
-        toggleCellActivity(state.fud.lastIdx, TYPES.fud);
+        toggleCellActivity({ idx : state.fud.lastIdx, type : TYPES.fud });
     }
 
     // turn on new cell
-    toggleCellActivity(idx, TYPES.fud);
+    toggleCellActivity({ idx, type : TYPES.fud });
 
     state.fud.lastIdx = idx;
 }
 
 function createSnek () {
-    for (let i = 0; i < state.snek.length; i++) {
-        const node = { ...state.snek.node };
-
-        if (i === 0) {
-            node.isHead = true;
-        }
+    if (!state.snek) {
+        state.snek = new LinkedList(state.boardSize);
     }
+
+    while (state.snek.length < STARTING_SNEK_SIZE) {
+        const nodeToAddToBoard = state.snek.tail || state.snek.head;
+
+        toggleCellActivity({
+            x    : nodeToAddToBoard.x,
+            y    : nodeToAddToBoard.y,
+            type : TYPES.snek
+        });
+
+        state.snek.addToTail();
+    }
+
+    // get the last one
+    toggleCellActivity({
+        x    : state.snek.tail.x,
+        y    : state.snek.tail.y,
+        type : TYPES.snek
+    });
 }
 
 /**
@@ -223,5 +267,6 @@ window.addEventListener("keyup", (e) => {
 window.addEventListener("DOMContentLoaded", () => {
     createLogo();
     createBoard();
+    createSnek();
     placeFud();
 });

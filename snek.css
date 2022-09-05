@@ -45,3 +45,6 @@ body {
 .cell[data-type=fud] {
     background-color : var(--fud);
 }
+.cell[data-type=snek] {
+    background-color: var(--snek);
+}
