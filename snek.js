@@ -119,7 +119,9 @@ const state = Object.seal({
  */
 /**
  * Say whether a cell is active or not
- * @param {number} idx - cell index
+ * @param {number} opts.idx - cell index
+ * @param {number} opts.x - x coordinate
+ * @param {number} opts.y - y coordinate
  * @param {string} type - fud | snek
  */
 function toggleCellActivity ({ idx, x, y, type }) {
@@ -142,6 +144,10 @@ function toggleCellActivity ({ idx, x, y, type }) {
     state.cells[idx][otherType] = false;
 }
 
+/**
+ * Get a new index for the fud. Recurse and make a new one if cell is unavailable.
+ * @returns {number} idx
+ */
 function getFudIdx () {
     const idx = Math.floor(Math.random() * state.boardSize);
 
@@ -154,11 +160,6 @@ function getFudIdx () {
 
 function placeFud () {
     const idx = getFudIdx();
-
-    // keep generating indeces until a valid one is found
-    // do {
-    //     idx = Math.floor(Math.random() * state.boardSize)
-    // } while (typeof idx === "number" && !state.cells[idx].active);
 
     if (state.fud.lastIdx) {
         // turn off old cell

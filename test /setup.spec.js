@@ -26,4 +26,10 @@ test.describe("Setting up Snek", () => {
 
         await expect(fud).toHaveCount(1);
     });
+
+    test("Snake is placed and is length 4", async ({ page }) => {
+        const snek = await page.locator("[data-type=snek]");
+
+        await expect(snek).toHaveCount(4);
+    })
 });
