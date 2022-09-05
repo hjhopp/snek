@@ -20,4 +20,10 @@ test.describe("Setting up Snek", () => {
 
         await expect(board).toHaveCount(1);
     });
+
+    test("Fud is placed", async ({ page }) => {
+        const fud = await page.locator("[data-type=fud]");
+
+        await expect(fud).toHaveCount(1);
+    });
 });
