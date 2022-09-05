@@ -4,8 +4,38 @@
     --logo: #D19C1D;
     --grid: #DAF0EE;
     --fud: #CC76A1;
+
+    --cell-width: 17px;
+
+    font-size: 16px;
+}
+
+* {
+    box-sizing: border-box;
 }
 
 body {
     background-color: var(--main-bg-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.logo {
+    font-family: "Georgia";
+    font-size: 4rem;
+    color: var(--logo);
+}
+
+.board {
+    display: flex;
+    position: relative;
+}
+
+.cell {
+    width: var(--cell-width);
+    height: var(--cell-width);
+    border: 1px solid var(--grid);
+    position: absolute;
+    opacity: 0.8;
 }
