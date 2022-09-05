@@ -15,11 +15,19 @@ const TYPES = {
 
 const state = {
     boardSize : GRID_SIZES.normal,
+    rows      : Math.sqrt(this.boardSize),
 
     snek : {
         length : 4,
-        posX   : null,
-        posY   : null,
+        nodes  : [],
+        node   : {
+            isHead   : false,
+            isTail   : false,
+            posX     : null,
+            posY     : null,
+            nextNode : null,
+            prevNode : null
+        }
     },
 
     fud : {
@@ -28,6 +36,76 @@ const state = {
 
     cells : []
 };
+
+class Node {
+    constructor ({ x, y }) {
+        this.x = x;
+        this.y = y;
+        this.previous = null;
+        this.next = null;
+    }
+}
+
+class LinkedList {
+    constructor () {
+        const newNode = new Node({ x : state.rows / 2, y : state.rows / 2 });
+
+        this.head = newNode;
+        this.tail = newNode;
+    }
+
+    #getNextCoord (node) {
+        const { x : prevX, y : prevY } = node.previous;
+        const { x : currX, y : currY } = node;
+
+        // going up
+        if (prevY < currY) {
+            return {
+                x : currX,
+                y : currY + 1
+            };
+        }
+
+        // going down
+        if (prevY > currY) {
+            return {
+                x : currX,
+                y : currY - 1
+            };
+        }
+
+        // going right
+        if (prevX < currX) {
+            return {
+                x : currX + 1,
+                y : currY
+            };
+        }
+
+        // going left
+        return {
+            x : currX - 1,
+            y : currY
+        };
+    }
+
+    addToTail () {
+        const firstAddition = !this.tail.previous;
+        const formerTail = this.tail;
+
+        if (firstAddition) {
+            const newNode = new Node({ x : this.head.x, y : this.head.y + 1 });
+
+            this.head.next = newNode;
+            this.tail = newNode;
+            this.tail.previous = this.head;
+        } else {
+            const newNode = new Node({});
+
+            newNode.previous = formerTail;
+        }
+    }
+}
 
 /**
  * Helper functions
@@ -64,6 +142,16 @@ function placeFud () {
     state.fud.lastIdx = idx;
 }
 
+function createSnek () {
+    for (let i = 0; i < state.snek.length; i++) {
+        const node = { ...state.snek.node };
+
+        if (i === 0) {
+            node.isHead = true;
+        }
+    }
+}
+
 /**
  *  Component creators
  */
@@ -82,8 +170,10 @@ function createBoard (parent = body, gridSize = GRID_SIZES.normal) {
     let row = 0;
 
     board.classList.add("board");
-    // bump board to the left so that the board is centered
-    board.style.left = `calc(var(--cell-width) * ${-(rows / 2)})`;
+    board.style.width = `calc(${rows} * var(--cell-width))`;
+    board.style.height = `calc(${rows} * var(--cell-width))`;
+
+    parent.append(board);
 
     for (let i = 0; i < gridSize; i++) {
         if (i % rows === 0 && i !== 0) {
@@ -111,30 +201,27 @@ function createBoard (parent = body, gridSize = GRID_SIZES.normal) {
             idx      : i,
             x,
             y,
-            isFud    : false,
-            isSnek   : false,
+            fud      : false,
+            snek     : false,
             isBorder : x === 0 ||
                 y === 0 ||
                 x === rows - 1 ||
                 y === rows - 1
         });
     }
-
-    parent.append(board);
 }
 
 /**
  * Event listeners
  */
- window.addEventListener("keyup", (e) => {
+window.addEventListener("keyup", (e) => {
     if (e.key === "Enter") {
         placeFud();
     }
 });
 
-/**
- * Execute
- */
-createLogo();
-createBoard();
-placeFud();
+window.addEventListener("DOMContentLoaded", () => {
+    createLogo();
+    createBoard();
+    placeFud();
+});

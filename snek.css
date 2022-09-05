@@ -14,8 +14,11 @@
     box-sizing: border-box;
 }
 
-body {
+html {
     background-color: var(--main-bg-color);
+}
+
+body {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -30,15 +33,15 @@ body {
 .board {
     display: flex;
     position: relative;
+    border: 1px solid var(--grid);
 }
 
 .cell {
     width: var(--cell-width);
     height: var(--cell-width);
-    border: 0.5px solid var(--grid);
     position: absolute;
+    border-radius: 50%;
 }
-
 .cell[data-type=fud] {
     background-color : var(--fud);
 }
