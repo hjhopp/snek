@@ -1,4 +1,6 @@
-const { test, expect } = require('@playwright/test');
+"use strict";
+
+const { test, expect } = require("@playwright/test");
 
 test.describe("Setting up Snek", () => {
     test.beforeEach(async ({ page }) => {
@@ -27,9 +29,9 @@ test.describe("Setting up Snek", () => {
         await expect(fud).toHaveCount(1);
     });
 
-    test("Snake is placed and is length 4", async ({ page }) => {
+    test("Snek is placed and is length 4", async ({ page }) => {
         const snek = await page.locator("[data-type=snek]");
 
         await expect(snek).toHaveCount(4);
-    })
+    });
 });

@@ -12,6 +12,21 @@ const TYPES = {
 
 const STARTING_SNEK_SIZE = 4;
 
+const DIRECTIONS = {
+    up    : "up",
+    down  : "down",
+    left  : "left",
+    right : "right"
+};
+
+const EVENT_CONSTANTS = {
+    snekmoved : "snekmoved"
+};
+
+const EVENTS = {
+    snekmoved : new Event([ EVENT_CONSTANTS.snekmoved ])
+};
+
 /**
  * Prototypes
  */
@@ -90,6 +105,36 @@ class LinkedList {
 
         this.length++;
     }
+
+    move (direction = DIRECTIONS.up) {
+        let currentNode = this.head;
+
+        switch (direction) {
+            case DIRECTIONS.up:
+                currentNode.y--;
+                break;
+            case DIRECTIONS.down:
+                currentNode.y++;
+                break;
+            case DIRECTIONS.left:
+                currentNode.x--;
+                break;
+            default:
+                currentNode.x++;
+                break;
+        }
+
+        while (currentNode.next) {
+            currentNode = currentNode.next;
+
+            const { x, y } = this.#getNextCoord(currentNode);
+
+            currentNode.x = x;
+            currentNode.y = y;
+        }
+
+        window.dispatchEvent(EVENTS.snekmoved);
+    }
 }
 
 /**
@@ -124,15 +169,8 @@ const state = Object.seal({
  * @param {number} opts.y - y coordinate
  * @param {string} type - fud | snek
  */
-function toggleCellActivity ({ idx, x, y, type }) {
-    const cell = idx ?
-        document.querySelector(`[data-idx='${idx}']`) :
-        document.querySelector(`[data-x='${x}'][data-y='${y}']`);
-
-    if (!idx) {
-        idx = cell.attributes["data-idx"].value;
-    }
-
+function toggleCellActivity ({ x, y, idx = coordsToIdx(x, y), type }) {
+    const cell = document.querySelector(`[data-idx='${idx}']`);
     const toggleTo = !state.cells[idx].active;
     const otherType = type === TYPES.fud ? TYPES.snek : TYPES.fud;
 
@@ -158,44 +196,10 @@ function getFudIdx () {
     return idx;
 }
 
-function placeFud () {
-    const idx = getFudIdx();
+/**
+ * Controls
+ */
 
-    if (state.fud.lastIdx) {
-        // turn off old cell
-        toggleCellActivity({ idx : state.fud.lastIdx, type : TYPES.fud });
-    }
-
-    // turn on new cell
-    toggleCellActivity({ idx, type : TYPES.fud });
-
-    state.fud.lastIdx = idx;
-}
-
-function createSnek () {
-    if (!state.snek) {
-        state.snek = new LinkedList(state.boardSize);
-    }
-
-    while (state.snek.length < STARTING_SNEK_SIZE) {
-        const nodeToAddToBoard = state.snek.tail || state.snek.head;
-
-        toggleCellActivity({
-            x    : nodeToAddToBoard.x,
-            y    : nodeToAddToBoard.y,
-            type : TYPES.snek
-        });
-
-        state.snek.addToTail();
-    }
-
-    // get the last one
-    toggleCellActivity({
-        x    : state.snek.tail.x,
-        y    : state.snek.tail.y,
-        type : TYPES.snek
-    });
-}
 
 /**
  *  Component creators
@@ -256,6 +260,51 @@ function createBoard (parent = body, gridSize = GRID_SIZES.normal) {
     }
 }
 
+function placeFud () {
+    const idx = getFudIdx();
+
+    if (state.fud.lastIdx) {
+        // turn off old cell
+        toggleCellActivity({ idx : state.fud.lastIdx, type : TYPES.fud });
+    }
+
+    // turn on new cell
+    toggleCellActivity({ idx, type : TYPES.fud });
+
+    state.fud.lastIdx = idx;
+}
+
+function createSnek () {
+    if (!state.snek) {
+        state.snek = new LinkedList(state.boardSize);
+    }
+
+    while (state.snek.length < STARTING_SNEK_SIZE) {
+        const nodeToAddToBoard = state.snek.tail || state.snek.head;
+
+        toggleCellActivity({
+            x    : nodeToAddToBoard.x,
+            y    : nodeToAddToBoard.y,
+            type : TYPES.snek
+        });
+
+        state.snek.addToTail();
+    }
+
+    // get the last one
+    toggleCellActivity({
+        x    : state.snek.tail.x,
+        y    : state.snek.tail.y,
+        type : TYPES.snek
+    });
+}
+
+function coordsToIdx (x, y) {
+    const rows = Math.sqrt(state.boardSize);
+
+    return (rows * y) + x;
+}
+
 /**
  * Event listeners
  */
@@ -263,6 +312,25 @@ window.addEventListener("keyup", (e) => {
     if (e.key === "Enter") {
         placeFud();
     }
+
+    switch (e.key) {
+        case "ArrowUp":
+            state.snek.move(DIRECTIONS.up);
+            break;
+        case "ArrowDown":
+            state.snek.move(DIRECTIONS.down);
+            break;
+        case "ArrowLeft":
+            state.snek.move(DIRECTIONS.left);
+            break;
+        default:
+            state.snek.move(DIRECTIONS.down);
+            break;
+    }
+});
+
+window.addEventListener(EVENT_CONSTANTS.snekmoved, () => {
+    console.log("snek moved!");
 });
 
 window.addEventListener("DOMContentLoaded", () => {

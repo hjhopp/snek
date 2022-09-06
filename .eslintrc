@@ -2,5 +2,14 @@
     "extends" : "hjh",
     "parserOptions": {
         "ecmaVersion": "latest"
-    }
+    },
+    "overrides": [
+        {
+            "files": "./test/unit/**/*.js",
+            "plugins": ["jest"],
+            "env": {
+                "jest/globals": true
+            }
+        }
+    ]
 }
