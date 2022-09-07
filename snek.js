@@ -36,10 +36,13 @@ const EVENTS = {
  */
 class Node {
     constructor ({ x, y }) {
+        // coordinates
         this.prevX = null;
         this.prevY = null;
         this.x = x;
         this.y = y;
+
+        // previous/next node in the list
         this.previous = null;
         this.next = null;
     }
@@ -54,11 +57,13 @@ class LinkedList {
         this.head = newNode;
         this.tail = null;
         this.length = 1;
+
+        this.currentNode = null;
     }
 
-    #getNextCoord (node) {
-        let { prevX, prevY } = node.previous;
-        const { x : currX, y : currY } = node;
+    #getNextCoord () {
+        let { prevX, prevY } = this.currentNode.previous;
+        const { x : currX, y : currY } = this.currentNode;
 
         // going up
         if (prevY < currY) {
@@ -131,62 +136,63 @@ class LinkedList {
             return false;
         }
 
-        // turn off current pos
-        this.#updateNode(this.head)
+        this.#toggleNodeDisplay(this.head)
             .#savePreviousCoords(this.head)
             .#saveCurrentCoords(this.head, { x : nextX, y : nextY })
-            .#updateNode(this.head);
+            .#toggleNodeDisplay(this.head);
 
         return true;
     }
 
     #updateTail () {
-        let currentNode = this.head.next;
+        this.currentNode = this.head.next;
 
-        while (currentNode.next) {
-            this.#updateNode(currentNode)
-                .#savePreviousCoords(currentNode)
-                .#saveCurrentCoords(currentNode, this.#getNextCoord(currentNode))
-                .#updateNode(currentNode);
+        while (this.currentNode.next) {
+            this.#toggleNodeDisplay()
+                .#savePreviousCoords()
+                .#saveCurrentCoords(this.#getNextCoord())
+                .#toggleNodeDisplay();
 
-            currentNode = currentNode.next;
+            this.currentNode = this.currentNode.next;
         }
     }
 
-    #updateNode (node) {
-        toggleCellActivity({ x : node.x, y : node.y, type : TYPES.snek });
+    #toggleNodeDisplay () {
+        toggleCellActivity({ x : this.currentNode.x, y : this.currentNode.y, type : TYPES.snek });
 
         return this;
     }
 
-    #savePreviousCoords (node) {
-        node.prevX = node.x;
-        node.prevY = node.y;
+    #savePreviousCoords () {
+        this.currentNode.prevX = this.currentNode.x;
+        this.currentNode.prevY = this.currentNode.y;
 
         return this;
     }
 
-    #saveCurrentCoords (node, coords) {
-        node.x = coords.x;
-        node.y = coords.y;
+    #saveCurrentCoords (coords) {
+        this.currentNode.x = coords.x;
+        this.currentNode.y = coords.y;
 
         return this;
     }
 
     addToTail () {
-        const formerTail = this.tail;
+        this.currentNode = this.tail;
 
-        if (!formerTail) {
+        // if no node, we only have a head, so add the second node
+        // else add to the tail
+        if (!this.currentNode) {
             const newNode = new Node({ x : this.head.x, y : this.head.y + 1 });
 
             this.head.next = newNode;
             this.tail = newNode;
             this.tail.previous = this.head;
         } else {
-            const newNode = new Node(this.#getNextCoord(formerTail));
+            const newNode = new Node(this.#getNextCoord());
 
-            formerTail.next = newNode;
-            newNode.previous = formerTail;
+            this.currentNode.next = newNode;
+            newNode.previous = this.currentNode;
 
             this.tail = newNode;
         }
