@@ -311,6 +311,10 @@ function getFudIdx () {
 /**
  *  Component creators
  */
+/**
+ * Create and display the logo
+ * @param {HTMLElement} parent
+ */
 function createLogo (parent = body) {
     const logo = $.createElement("h1");
 
@@ -320,6 +324,11 @@ function createLogo (parent = body) {
     parent.append(logo);
 }
 
+/**
+ * Create and display the game baord. The origin (0,0) is the top left corner.
+ * @param {HTMLElement} parent
+ * @param {number} gridSize - must have a square root
+ */
 function createBoard (parent = body, gridSize = GRID_SIZES.normal) {
     const board = $.createElement("div");
     const rows = Math.sqrt(gridSize);
