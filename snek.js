@@ -50,6 +50,8 @@ class Node {
 
 class LinkedList {
     constructor (boardSize) {
+        // make a smaller range of random numbers to choose from so snek always lands on the board
+        // this is pretty handwavey, whatevs
         const smallerBoard = Math.sqrt(boardSize / 3);
         const coord = Math.floor(Math.random() * smallerBoard);
         const newNode = new Node({ x : coord, y : coord });
@@ -109,20 +111,24 @@ class LinkedList {
         switch (direction) {
             case DIRECTIONS.up: {
                 nextY = this.head.y - 1;
+
                 break;
             }
             case DIRECTIONS.down: {
                 nextY = this.head.y + 1;
+
                 break;
             }
             case DIRECTIONS.left: {
                 nextX = this.head.x - 1;
                 compareY = false;
+
                 break;
             }
             default: {
                 nextX = this.head.x + 1;
                 compareY = false;
+
                 break;
             }
         }
@@ -200,7 +206,6 @@ class LinkedList {
         this.length++;
     }
 
-    /* eslint-disable */
     move (direction = DIRECTIONS.up) {
         const update = this.#updateHead(direction);
 
@@ -209,6 +214,7 @@ class LinkedList {
         }
 
         this.#updateTail();
+
         window.dispatchEvent(EVENTS.snekmoved);
     }
 }
@@ -232,8 +238,33 @@ const state = Object.seal({
         lastIdx : null
     },
 
-    cells : []
+    // every cell has its own state
+    cells : [
+        /**
+         * {
+                active   : {boolean},
+                idx      : {number},
+                x        : {number},
+                y        : {number},
+                fud      : {boolean},
+                snek     : {boolean},
+                isBorder : {boolean}
+            }
+         */
+    ]
 });
+
+function createCell ({ active, idx, x, y, fud, snek, isBorder }) {
+    return Object.seal({
+        active,
+        idx,
+        x,
+        y,
+        fud,
+        snek,
+        isBorder
+    });
+}
 
 /**
  * Helper functions
@@ -321,7 +352,7 @@ function createBoard (parent = body, gridSize = GRID_SIZES.normal) {
 
         board.append(cell);
 
-        state.cells.push({
+        state.cells.push(createCell({
             active   : false,
             idx      : i,
             x,
@@ -332,7 +363,7 @@ function createBoard (parent = body, gridSize = GRID_SIZES.normal) {
                 y === 0 ||
                 x === rows - 1 ||
                 y === rows - 1
-        });
+        }));
     }
 }
 
