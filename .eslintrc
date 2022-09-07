@@ -1,7 +1,11 @@
 {
     "extends" : "hjh",
+    "plugins": ["use-strict"],
     "parserOptions": {
         "ecmaVersion": "latest"
+    },
+    "rules" : {
+        "use-strict/use-strict-at-top-of-document": "error"
     },
     "overrides": [
         {

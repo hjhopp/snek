@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Constants
  */
@@ -19,12 +21,14 @@ const DIRECTIONS = {
     right : "right"
 };
 
-const EVENT_CONSTANTS = {
-    snekmoved : "snekmoved"
+const EVENT_NAMES = {
+    snekmoved : "snekmoved",
+    fudfound  : "fudfound"
 };
 
 const EVENTS = {
-    snekmoved : new Event([ EVENT_CONSTANTS.snekmoved ])
+    snekmoved : new Event(EVENT_NAMES.snekmoved),
+    fudfound  : new Event(EVENT_NAMES.fudfound)
 };
 
 /**
@@ -32,6 +36,8 @@ const EVENTS = {
  */
 class Node {
     constructor ({ x, y }) {
+        this.prevX = null;
+        this.prevY = null;
         this.x = x;
         this.y = y;
         this.previous = null;
@@ -51,7 +57,7 @@ class LinkedList {
     }
 
     #getNextCoord (node) {
-        const { x : prevX, y : prevY } = node.previous;
+        let { prevX, prevY } = node.previous;
         const { x : currX, y : currY } = node;
 
         // going up
@@ -85,6 +91,88 @@ class LinkedList {
         };
     }
 
+    /**
+     * Update the position of the head
+     * @param {string} direction
+     * @returns {boolean} true if updated, false if not
+     */
+    #updateHead (direction) {
+        let nextX = this.head.x;
+        let nextY = this.head.y;
+        let compareY = true;
+
+        switch (direction) {
+            case DIRECTIONS.up: {
+                nextY = this.head.y - 1;
+                break;
+            }
+            case DIRECTIONS.down: {
+                nextY = this.head.y + 1;
+                break;
+            }
+            case DIRECTIONS.left: {
+                nextX = this.head.x - 1;
+                compareY = false;
+                break;
+            }
+            default: {
+                nextX = this.head.x + 1;
+                compareY = false;
+                break;
+            }
+        }
+
+        // can't go up if we were going down
+        // can't go down if we were going up, etc
+        if (compareY ?
+            nextY === this.head.next.y :
+            nextX === this.head.next.x
+        ) {
+            return false;
+        }
+
+        // turn off current pos
+        this.#updateNode(this.head)
+            .#savePreviousCoords(this.head)
+            .#saveCurrentCoords(this.head, { x : nextX, y : nextY })
+            .#updateNode(this.head);
+
+        return true;
+    }
+
+    #updateTail () {
+        let currentNode = this.head.next;
+
+        while (currentNode.next) {
+            this.#updateNode(currentNode)
+                .#savePreviousCoords(currentNode)
+                .#saveCurrentCoords(currentNode, this.#getNextCoord(currentNode))
+                .#updateNode(currentNode);
+
+            currentNode = currentNode.next;
+        }
+    }
+
+    #updateNode (node) {
+        toggleCellActivity({ x : node.x, y : node.y, type : TYPES.snek });
+
+        return this;
+    }
+
+    #savePreviousCoords (node) {
+        node.prevX = node.x;
+        node.prevY = node.y;
+
+        return this;
+    }
+
+    #saveCurrentCoords (node, coords) {
+        node.x = coords.x;
+        node.y = coords.y;
+
+        return this;
+    }
+
     addToTail () {
         const formerTail = this.tail;
 
@@ -106,33 +194,15 @@ class LinkedList {
         this.length++;
     }
 
+    /* eslint-disable */
     move (direction = DIRECTIONS.up) {
-        let currentNode = this.head;
+        const update = this.#updateHead(direction);
 
-        switch (direction) {
-            case DIRECTIONS.up:
-                currentNode.y--;
-                break;
-            case DIRECTIONS.down:
-                currentNode.y++;
-                break;
-            case DIRECTIONS.left:
-                currentNode.x--;
-                break;
-            default:
-                currentNode.x++;
-                break;
+        if (!update) {
+            return;
         }
 
-        while (currentNode.next) {
-            currentNode = currentNode.next;
-
-            const { x, y } = this.#getNextCoord(currentNode);
-
-            currentNode.x = x;
-            currentNode.y = y;
-        }
-
+        this.#updateTail();
         window.dispatchEvent(EVENTS.snekmoved);
     }
 }
@@ -324,13 +394,13 @@ window.addEventListener("keyup", (e) => {
             state.snek.move(DIRECTIONS.left);
             break;
         default:
-            state.snek.move(DIRECTIONS.down);
+            state.snek.move(DIRECTIONS.right);
             break;
     }
 });
 
-window.addEventListener(EVENT_CONSTANTS.snekmoved, () => {
-    console.log("snek moved!");
+window.addEventListener(EVENT_NAMES.snekmoved, () => {
+
 });
 
 window.addEventListener("DOMContentLoaded", () => {
