@@ -144,10 +144,7 @@ class LinkedList {
             return false;
         }
 
-        this.#toggleNodeDisplay()
-            .#savePreviousCoords()
-            .#saveCurrentCoords({ x : nextX, y : nextY })
-            .#toggleNodeDisplay();
+        this.#processMoveNode({ x : nextX, y : nextY });
 
         return true;
     }
@@ -156,13 +153,10 @@ class LinkedList {
         this.currentNode = this.head.next;
 
         while (this.currentNode.next) {
-            this.#toggleNodeDisplay()
-                .#savePreviousCoords()
-                .#saveCurrentCoords({
-                    x : this.currentNode.previous.prevX,
-                    y : this.currentNode.previous.prevY
-                })
-                .#toggleNodeDisplay();
+            this.#processMoveNode({
+                x : this.currentNode.previous.prevX,
+                y : this.currentNode.previous.prevY
+            });
 
             this.currentNode = this.currentNode.next;
 
@@ -171,6 +165,13 @@ class LinkedList {
                 this.currentNode.next = {};
             }
         }
+    }
+
+    #processMoveNode ({ x, y }) {
+        this.#toggleNodeDisplay()
+            .#savePreviousCoords()
+            .#saveCurrentCoords({ x, y })
+            .#toggleNodeDisplay();
     }
 
     #toggleNodeDisplay () {
@@ -225,7 +226,7 @@ class LinkedList {
 
         this.#updateTail();
 
-        // window.dispatchEvent(EVENTS.snekmoved);
+        window.dispatchEvent(EVENTS.snekmoved);
     }
 }
 
@@ -312,11 +313,6 @@ function getFudIdx () {
 
     return idx;
 }
-
-/**
- * Controls
- */
-
 
 /**
  *  Component creators
@@ -435,28 +431,40 @@ function coordsToIdx (x, y) {
  * Event listeners
  */
 window.addEventListener("keyup", (e) => {
-    if (e.key === "Enter") {
-        placeFud();
-    }
-
     switch (e.key) {
         case "ArrowUp":
+        case "W":
+        case "w":
             state.snek.move(DIRECTIONS.up);
+
             break;
         case "ArrowDown":
+        case "S":
+        case "s":
             state.snek.move(DIRECTIONS.down);
+
             break;
         case "ArrowLeft":
+        case "A":
+        case "a":
             state.snek.move(DIRECTIONS.left);
+
+            break;
+        case "ArrowRight":
+        case "D":
+        case "d":
+            state.snek.move(DIRECTIONS.right);
+
             break;
         default:
-            state.snek.move(DIRECTIONS.right);
             break;
     }
 });
 
 window.addEventListener(EVENT_NAMES.snekmoved, () => {
-
+    // check if snek head hit fud, border, or itself
+    // if fud, fire fud found event, move fud and add to the tail
+    // if border or itself, game over
 });
 
 createLogo();
