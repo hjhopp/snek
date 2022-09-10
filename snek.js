@@ -63,7 +63,7 @@ class LinkedList {
         this.currentNode = null;
     }
 
-    #getNextCoord () {
+    #getNextTailCoord () {
         let { prevX, prevY } = this.currentNode.previous;
         const { x : currX, y : currY } = this.currentNode;
 
@@ -165,18 +165,12 @@ class LinkedList {
                 .#toggleNodeDisplay();
 
             this.currentNode = this.currentNode.next;
+
+            // fudge .next on the last node so we can run this loop one more time
+            if (!this.currentNode.next) {
+                this.currentNode.next = {};
+            }
         }
-
-        // get the last node
-        this.currentNode = this.tail;
-
-        this.#toggleNodeDisplay()
-            .#savePreviousCoords()
-            .#saveCurrentCoords({
-                x : this.currentNode.previous.prevX,
-                y : this.currentNode.previous.prevY
-            })
-            .#toggleNodeDisplay();
     }
 
     #toggleNodeDisplay () {
@@ -203,7 +197,7 @@ class LinkedList {
         this.currentNode = this.tail;
 
         // if no node, we only have a head, so add the second node
-        // else add to the tail
+        // else add to the end of the tail
         if (!this.currentNode) {
             const newNode = new Node({ x : this.head.x, y : this.head.y + 1 });
 
@@ -211,7 +205,7 @@ class LinkedList {
             this.tail = newNode;
             this.tail.previous = this.head;
         } else {
-            const newNode = new Node(this.#getNextCoord());
+            const newNode = new Node(this.#getNextTailCoord());
 
             this.currentNode.next = newNode;
             newNode.previous = this.currentNode;
