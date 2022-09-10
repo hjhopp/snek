@@ -104,6 +104,8 @@ class LinkedList {
      * @returns {boolean} true if updated, false if not
      */
     #updateHead (direction) {
+        this.currentNode = this.head;
+
         let nextX = this.head.x;
         let nextY = this.head.y;
         let compareY = true;
@@ -142,10 +144,10 @@ class LinkedList {
             return false;
         }
 
-        this.#toggleNodeDisplay(this.head)
-            .#savePreviousCoords(this.head)
-            .#saveCurrentCoords(this.head, { x : nextX, y : nextY })
-            .#toggleNodeDisplay(this.head);
+        this.#toggleNodeDisplay()
+            .#savePreviousCoords()
+            .#saveCurrentCoords({ x : nextX, y : nextY })
+            .#toggleNodeDisplay();
 
         return true;
     }
@@ -156,11 +158,25 @@ class LinkedList {
         while (this.currentNode.next) {
             this.#toggleNodeDisplay()
                 .#savePreviousCoords()
-                .#saveCurrentCoords(this.#getNextCoord())
+                .#saveCurrentCoords({
+                    x : this.currentNode.previous.prevX,
+                    y : this.currentNode.previous.prevY
+                })
                 .#toggleNodeDisplay();
 
             this.currentNode = this.currentNode.next;
         }
+
+        // get the last node
+        this.currentNode = this.tail;
+
+        this.#toggleNodeDisplay()
+            .#savePreviousCoords()
+            .#saveCurrentCoords({
+                x : this.currentNode.previous.prevX,
+                y : this.currentNode.previous.prevY
+            })
+            .#toggleNodeDisplay();
     }
 
     #toggleNodeDisplay () {
@@ -215,7 +231,7 @@ class LinkedList {
 
         this.#updateTail();
 
-        window.dispatchEvent(EVENTS.snekmoved);
+        // window.dispatchEvent(EVENTS.snekmoved);
     }
 }
 
@@ -449,9 +465,7 @@ window.addEventListener(EVENT_NAMES.snekmoved, () => {
 
 });
 
-window.addEventListener("DOMContentLoaded", () => {
-    createLogo();
-    createBoard();
-    createSnek();
-    placeFud();
-});
+createLogo();
+createBoard();
+createSnek();
+placeFud();
