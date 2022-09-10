@@ -63,6 +63,10 @@ class LinkedList {
         this.currentNode = null;
     }
 
+    /**
+     * Get the next coordinates of the current node by looking at the previous node and itself
+     * @returns {object} x, y coordinates
+     */
     #getNextTailCoord () {
         let { prevX, prevY } = this.currentNode.previous;
         const { x : currX, y : currY } = this.currentNode;
@@ -149,6 +153,9 @@ class LinkedList {
         return true;
     }
 
+    /**
+     * Update the position of all the tail nodes
+     */
     #updateTail () {
         this.currentNode = this.head.next;
 
@@ -170,7 +177,7 @@ class LinkedList {
     #processMoveNode ({ x, y }) {
         this.#toggleNodeDisplay()
             .#savePreviousCoords()
-            .#saveCurrentCoords({ x, y })
+            .#saveNextCoords({ x, y })
             .#toggleNodeDisplay();
     }
 
@@ -187,14 +194,14 @@ class LinkedList {
         return this;
     }
 
-    #saveCurrentCoords (coords) {
+    #saveNextCoords (coords) {
         this.currentNode.x = coords.x;
         this.currentNode.y = coords.y;
 
         return this;
     }
 
-    addToTail () {
+    addNodeToTail () {
         this.currentNode = this.tail;
 
         // if no node, we only have a head, so add the second node
@@ -410,7 +417,7 @@ function createSnek () {
             type : TYPES.snek
         });
 
-        state.snek.addToTail();
+        state.snek.addNodeToTail();
     }
 
     // get the last one
