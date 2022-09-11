@@ -1,6 +1,6 @@
 "use strict";
 
-const { test, expect } = require("@playwright/test");
+import { test, expect } from "@playwright/test";
 
 test.describe("Setting up Snek", () => {
     test.beforeEach(async ({ page }) => {
