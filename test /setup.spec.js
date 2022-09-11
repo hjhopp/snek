@@ -1,5 +1,3 @@
-"use strict";
-
 import { test, expect } from "@playwright/test";
 
 test.describe("Setting up Snek", () => {
