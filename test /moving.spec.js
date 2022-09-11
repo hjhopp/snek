@@ -1,5 +1,11 @@
 import { test, expect } from "@playwright/test";
 
+async function pressKeysAndReturnFired ({ page, keys }) {
+    await Promise.all(keys.map((key) => page.keyboard.press(key)));
+
+    return page.evaluate(() => window.fired);
+}
+
 test.describe("Moving", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("");
@@ -16,36 +22,89 @@ test.describe("Moving", () => {
     });
 
     test("Using arrow keys fires a snek moved event", async ({ page }) => {
-        await page.keyboard.press("ArrowUp");
-        await page.keyboard.press("ArrowRight");
-        await page.keyboard.press("ArrowDown");
-        await page.keyboard.press("ArrowLeft");
-
-        const fired = await page.evaluate(() => window.fired);
+        const fired = await pressKeysAndReturnFired({
+            page,
+            keys : [
+                "ArrowUp",
+                "ArrowRight",
+                "ArrowDown",
+                "ArrowLeft"
+            ]
+        });
 
         await expect(fired).toBe(4);
      });
 
      test("Using WASD keys fires a snek moved event", async({ page }) => {
-        await page.keyboard.press("CapsLock");
-        await page.keyboard.press("W");
-        await page.keyboard.press("A");
-        await page.keyboard.press("S");
-        await page.keyboard.press("D");
-
-        const fired = await page.evaluate(() => window.fired);
+        const fired = await pressKeysAndReturnFired({
+            page,
+            keys : [
+                "CapsLock",
+                "W",
+                "A",
+                "S",
+                "D"
+            ]
+        });
 
         await expect(fired).toBe(4);
      });
 
      test("Using wasd keys fires a snek moved event", async({ page }) => {
-        await page.keyboard.press("w");
-        await page.keyboard.press("a");
-        await page.keyboard.press("s");
-        await page.keyboard.press("d");
-
-        const fired = await page.evaluate(() => window.fired);
+        const fired = await pressKeysAndReturnFired({
+            page,
+            keys : [
+                "w",
+                "a",
+                "s",
+                "d"
+            ]
+        });
 
         await expect(fired).toBe(4);
+     });
+
+     test("Going 'up' moves the snek up", async ({ page }) => {
+        await page.keyboard.press("ArrowUp");
+
+        const { prevX, prevY, x, y } = await page.evaluate(() => state.snek.head);
+
+        await expect(x).toBe(prevX);
+        await expect(y).toBeLessThan(prevY);
+     });
+
+     test("Going 'left' moves snek head left", async ({ page }) => {
+        await page.keyboard.press("ArrowLeft");
+
+        const { prevX, prevY, x, y } = await page.evaluate(() => state.snek.head);
+
+        await expect(x).toBeLessThan(prevX);
+        await expect(y).toBe(prevY);
+     });
+
+     test("Going 'right' moves snek head right", async ({ page }) => {
+        await page.keyboard.press("ArrowRight");
+
+        const { prevX, prevY, x, y } = await page.evaluate(() => state.snek.head);
+
+        await expect(x).toBeGreaterThan(prevX);
+        await expect(y).toBe(prevY);
+     })
+
+     // Have to go right before bc game starts with snek going up
+     test("Going 'down' moves the snek down", async ({ page }) => {
+        await page.keyboard.press("ArrowRight");
+        await page.keyboard.press("ArrowDown");
+
+        const { prevX, prevY, x, y } = await page.evaluate(() => state.snek.head);
+
+        await expect(x).toBe(prevX);
+        await expect(y).toBeGreaterThan(prevY);
+     });
+
+     test("Can't go down if snek moving up", async ({ page }) => {
+        const fired = await pressKeysAndReturnFired({ page, keys : [ "ArrowDown" ] });
+
+        await expect(fired).toBe(0);
      });
 });

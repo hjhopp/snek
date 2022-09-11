@@ -260,7 +260,7 @@ const state = Object.seal({
     snek : null,
 
     fud : {
-        lastIdx : null
+        idx : null
     },
 
     // every cell has its own state
@@ -399,15 +399,15 @@ function createBoard (parent = body, gridSize = GRID_SIZES.normal) {
 function placeFud () {
     const idx = getFudIdx();
 
-    if (state.fud.lastIdx) {
+    if (state.fud.idx) {
         // turn off old cell
-        toggleCellActivity({ idx : state.fud.lastIdx, type : TYPES.fud });
+        toggleCellActivity({ idx : state.fud.idx, type : TYPES.fud });
     }
 
     // turn on new cell
     toggleCellActivity({ idx, type : TYPES.fud });
 
-    state.fud.lastIdx = idx;
+    state.fud.idx = idx;
 }
 
 function createSnek () {
@@ -476,10 +476,17 @@ window.addEventListener("keyup", (e) => {
 });
 
 window.addEventListener(EVENT_NAMES.snekmoved, () => {
-    // check if snek head hit fud, border, or itself
-    // if fud, fire fud found event, move fud and add to the tail
-    // if border or itself, game over
-    console.log("snek moved!");
+    const snekHeadIdx = coordsToIdx(state.snek.head.x, state.snek.head.y);
+
+    if (snekHeadIdx === state.fud.idx) {
+        placeFud();
+
+        state.snek.addNodeToTail();
+    }
+
+    if (state.cells[snekHeadIdx].isBorder) {
+        console.log("about to hit wall");
+    }
 });
 
 /**
