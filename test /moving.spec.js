@@ -64,7 +64,7 @@ test.describe("Moving", () => {
         await expect(fired).toBe(4);
      });
 
-     test("Going 'up' moves the snek up", async ({ page }) => {
+     test("Going 'up' moves the snek head up", async ({ page }) => {
         await page.keyboard.press("ArrowUp");
 
         const { prevX, prevY, x, y } = await page.evaluate(() => state.snek.head);
@@ -92,7 +92,7 @@ test.describe("Moving", () => {
      })
 
      // Have to go right before bc game starts with snek going up
-     test("Going 'down' moves the snek down", async ({ page }) => {
+     test("Going 'down' moves the snek head down", async ({ page }) => {
         await page.keyboard.press("ArrowRight");
         await page.keyboard.press("ArrowDown");
 

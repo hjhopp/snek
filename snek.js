@@ -156,28 +156,16 @@ class LinkedList {
     /**
      * Update the position of all the tail nodes
      */
-    #updateTail () {
-        this.currentNode = this.head.next;
+    #updateTail (currentNode = this.head.next) {
+        this.currentNode = currentNode;
 
-        while (this.currentNode.next) {
-            this.#processMoveNode({
-                x : this.currentNode.previous.prevX,
-                y : this.currentNode.previous.prevY
-            });
+        this.#processMoveNode({
+            x : this.currentNode.previous.prevX,
+            y : this.currentNode.previous.prevY
+        });
 
-            // revert the fudge
-            if (typeof this.currentNode.next !== "object") {
-                this.currentNode.next = null;
-
-                break;
-            }
-
-            this.currentNode = this.currentNode.next;
-
-            // fudge .next on the last node so we can run this loop one more time
-            if (!this.currentNode.next) {
-                this.currentNode.next = true;
-            }
+        if (this.currentNode.next) {
+            this.#updateTail(this.currentNode.next);
         }
     }
 
