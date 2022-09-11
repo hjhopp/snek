@@ -1,4 +1,6 @@
 // @ts-check
+"use strict";
+
 const { devices } = require("@playwright/test");
 const path = require("path");
 
@@ -8,7 +10,7 @@ const path = require("path");
  * @type {import('@playwright/test').PlaywrightTestConfig}
  */
 const config = {
-  testDir : "./test/e2e ",
+//   testDir : "./e2e",
   /* Maximum time one test can run for. */
   timeout : 30 * 1000,
   expect  : {

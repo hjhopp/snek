@@ -165,11 +165,18 @@ class LinkedList {
                 y : this.currentNode.previous.prevY
             });
 
+            // revert the fudge
+            if (typeof this.currentNode.next !== "object") {
+                this.currentNode.next = null;
+
+                break;
+            }
+
             this.currentNode = this.currentNode.next;
 
             // fudge .next on the last node so we can run this loop one more time
             if (!this.currentNode.next) {
-                this.currentNode.next = {};
+                this.currentNode.next = true;
             }
         }
     }
@@ -472,8 +479,12 @@ window.addEventListener(EVENT_NAMES.snekmoved, () => {
     // check if snek head hit fud, border, or itself
     // if fud, fire fud found event, move fud and add to the tail
     // if border or itself, game over
+    console.log("snek moved!");
 });
 
+/**
+ * Init
+ */
 createLogo();
 createBoard();
 createSnek();
