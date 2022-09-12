@@ -34,6 +34,10 @@ const EVENTS = {
 /**
  * Prototypes
  */
+/**
+ * A node in a list
+ * @typedef Node
+ */
 class Node {
     constructor ({ x, y }) {
         // coordinates
@@ -148,7 +152,7 @@ class LinkedList {
             return false;
         }
 
-        this.#processMoveNode({ x : nextX, y : nextY });
+        this.#moveNode({ x : nextX, y : nextY });
 
         return true;
     }
@@ -159,7 +163,7 @@ class LinkedList {
     #updateTail (currentNode = this.head.next) {
         this.currentNode = currentNode;
 
-        this.#processMoveNode({
+        this.#moveNode({
             x : this.currentNode.previous.prevX,
             y : this.currentNode.previous.prevY
         });
@@ -169,17 +173,9 @@ class LinkedList {
         }
     }
 
-    #processMoveNode ({ x, y }) {
-        this.#toggleNodeDisplay()
-            .#savePreviousCoords()
-            .#saveNextCoords({ x, y })
-            .#toggleNodeDisplay();
-    }
-
-    #toggleNodeDisplay () {
-        toggleCellActivity({ x : this.currentNode.x, y : this.currentNode.y, type : TYPES.snek });
-
-        return this;
+    #moveNode ({ x, y }) {
+        this.#savePreviousCoords()
+            .#saveNextCoords({ x, y });
     }
 
     #savePreviousCoords () {
@@ -229,6 +225,35 @@ class LinkedList {
         this.#updateTail();
 
         window.dispatchEvent(EVENTS.snekmoved);
+    }
+
+    /* eslint-disable callback-return */
+    forEach (cb, currentNode = this.head) {
+        cb(currentNode);
+
+        if (currentNode.next) {
+            this.forEach(cb, currentNode.next);
+        }
+    }
+
+    /**
+     * Loop through list until callback returns true
+     * @param {function} cb
+     * @param {Node} currentNode
+     * @returns
+     */
+    some (cb, currentNode = this.head) {
+        if (!currentNode) {
+            return false;
+        }
+
+        const result = cb(currentNode);
+
+        if (!currentNode.next) {
+            return result;
+        }
+
+        return result || this.some(cb, currentNode.next);
     }
 }
 
@@ -314,6 +339,20 @@ function getFudIdx () {
     }
 
     return idx;
+}
+
+/**
+ * Check if snek head is hitting body
+ * @returns {boolean}
+ */
+function checkBodyCollision () {
+    const headCoords = coordsToIdx(state.snek.head.x, state.snek.head.y);
+
+    return state.snek.some((node) => {
+        const nodeCoords = coordsToIdx(node.x, node.y);
+
+        return headCoords === nodeCoords;
+    }, state.snek.head.next);
 }
 
 /**
@@ -465,6 +504,17 @@ window.addEventListener("keyup", (e) => {
 
 window.addEventListener(EVENT_NAMES.snekmoved, () => {
     const snekHeadIdx = coordsToIdx(state.snek.head.x, state.snek.head.y);
+    const shouldUpdate = !checkBodyCollision();
+
+    if (shouldUpdate) {
+        state.snek.forEach((node) => {
+            // turn off old cell
+            toggleCellActivity({ x : node.prevX, y : node.prevY, type : TYPES.snek });
+
+            // turn on new cell
+            toggleCellActivity({ x : node.x, y : node.y, type : TYPES.snek });
+        });
+    }
 
     if (snekHeadIdx === state.fud.idx) {
         placeFud();
@@ -474,6 +524,10 @@ window.addEventListener(EVENT_NAMES.snekmoved, () => {
 
     if (state.cells[snekHeadIdx].isBorder) {
         console.log("about to hit wall");
+    }
+
+    if (checkBodyCollision()) {
+        console.log("hit the body");
     }
 });
 
