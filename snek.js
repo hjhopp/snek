@@ -69,17 +69,18 @@ class LinkedList {
 
     /**
      * Get the next coordinates of the current node by looking at the previous node and itself
+     * @param {boolean} [opts.stationary=false] - only true when the snek is first created
      * @returns {object} x, y coordinates
      */
-    #getNextTailCoord () {
-        let { prevX, prevY } = this.currentNode.previous;
+    #getNextTailCoord ({ stationary = false } = {}) {
+        let { prevX, prevY } = stationary ? this.currentNode.previous : this.currentNode;
         const { x : currX, y : currY } = this.currentNode;
 
         // going up
         if (prevY < currY) {
             return {
                 x : currX,
-                y : currY + 1
+                y : stationary ? currY + 1 : currY - 1
             };
         }
 
@@ -87,23 +88,25 @@ class LinkedList {
         if (prevY > currY) {
             return {
                 x : currX,
-                y : currY - 1
+                y : stationary ? currY - 1 : currY + 1
             };
         }
 
         // going right
         if (prevX < currX) {
             return {
-                x : currX + 1,
+                x : stationary ? currX + 1 : currX - 1,
                 y : currY
             };
         }
 
         // going left
-        return {
-            x : currX - 1,
-            y : currY
-        };
+        if (prevX > currX) {
+            return {
+                x : stationary ? currX - 1 : currX + 1,
+                y : currY
+            };
+        }
     }
 
     /**
@@ -192,7 +195,11 @@ class LinkedList {
         return this;
     }
 
-    addNodeToTail () {
+    /**
+     * Adds a node to the list
+     * @param {boolean} [opts.stationary=false] - only true when first creating the snek
+     */
+    addNodeToTail ({ stationary = false } = {}) {
         this.currentNode = this.tail;
 
         // if no node, we only have a head, so add the second node
@@ -204,7 +211,7 @@ class LinkedList {
             this.tail = newNode;
             this.tail.previous = this.head;
         } else {
-            const newNode = new Node(this.#getNextTailCoord());
+            const newNode = new Node(this.#getNextTailCoord({ stationary }));
 
             this.currentNode.next = newNode;
             newNode.previous = this.currentNode;
@@ -423,10 +430,10 @@ function createBoard (parent = body, gridSize = GRID_SIZES.normal) {
     }
 }
 
-function placeFud () {
+function placeFud ({ eaten = false } = {}) {
     const idx = getFudIdx();
 
-    if (state.fud.idx) {
+    if (state.fud.idx && !eaten) {
         // turn off old cell
         toggleCellActivity({ idx : state.fud.idx, type : TYPES.fud });
     }
@@ -451,7 +458,7 @@ function createSnek () {
             type : TYPES.snek
         });
 
-        state.snek.addNodeToTail();
+        state.snek.addNodeToTail({ stationary : true });
     }
 
     // get the last one
@@ -517,9 +524,16 @@ window.addEventListener(EVENT_NAMES.snekmoved, () => {
     }
 
     if (snekHeadIdx === state.fud.idx) {
-        placeFud();
+        // turn the head back on, since the overlap turned it off
+        toggleCellActivity({ x : state.snek.head.x, y : state.snek.head.y, type : TYPES.snek });
+
+        // move fud somewhere new
+        placeFud({ eaten : true });
 
         state.snek.addNodeToTail();
+
+        // turn the new tail on
+        toggleCellActivity({ x : state.snek.tail.x, y : state.snek.tail.y, type : TYPES.snek });
     }
 
     if (state.cells[snekHeadIdx].isBorder) {

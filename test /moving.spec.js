@@ -102,6 +102,7 @@ test.describe("Moving", () => {
         await expect(y).toBeGreaterThan(prevY);
      });
 
+     // relies on snek going up by default
      test("Can't go down if snek moving up", async ({ page }) => {
         const fired = await pressKeysAndReturnFired({ page, keys : [ "ArrowDown" ] });
 
