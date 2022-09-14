@@ -527,13 +527,12 @@ window.addEventListener(EVENT_NAMES.snekmoved, () => {
         // turn the head back on, since the overlap turned it off
         toggleCellActivity({ x : state.snek.head.x, y : state.snek.head.y, type : TYPES.snek });
 
-        // move fud somewhere new
-        placeFud({ eaten : true });
-
         state.snek.addNodeToTail();
 
         // turn the new tail on
         toggleCellActivity({ x : state.snek.tail.x, y : state.snek.tail.y, type : TYPES.snek });
+
+        window.dispatchEvent(EVENTS.fudfound);
     }
 
     if (state.cells[snekHeadIdx].isBorder) {
@@ -543,6 +542,11 @@ window.addEventListener(EVENT_NAMES.snekmoved, () => {
     if (checkBodyCollision()) {
         console.log("hit the body");
     }
+});
+
+window.addEventListener(EVENT_NAMES.fudfound, () => {
+    // move fud somewhere new
+    placeFud({ eaten : true });
 });
 
 /**
