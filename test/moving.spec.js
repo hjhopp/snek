@@ -89,7 +89,7 @@ test.describe("Moving", () => {
 
         await expect(x).toBeGreaterThan(prevX);
         await expect(y).toBe(prevY);
-     })
+     });
 
      // Have to go right before bc game starts with snek going up
      test("Going 'down' moves the snek head down", async ({ page }) => {

@@ -22,6 +22,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin: 0;
 }
 
 .logo {
@@ -47,4 +48,21 @@ body {
 }
 .cell[data-type=snek] {
     background-color: var(--snek);
+}
+
+.gameover[data-status=true] {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-family: Arial;
+    font-weight: normal;
+}
+.gameover[data-status=false] {
+    display: none;
+}
+
+.gameover button {
+    padding: 0.5em;
 }

@@ -23,12 +23,14 @@ const DIRECTIONS = {
 
 const EVENT_NAMES = {
     snekmoved : "snekmoved",
-    fudfound  : "fudfound"
+    fudfound  : "fudfound",
+    gameover  : "gameover"
 };
 
 const EVENTS = {
     snekmoved : new Event(EVENT_NAMES.snekmoved),
-    fudfound  : new Event(EVENT_NAMES.fudfound)
+    fudfound  : new Event(EVENT_NAMES.fudfound),
+    gameover  : new Event(EVENT_NAMES.gameover)
 };
 
 /**
@@ -275,7 +277,10 @@ const body = $.getElementsByTagName("body")[0];
  */
 // Sealing so I'm forced to add properties I want on state here and not buried elsewhere
 const state = Object.seal({
+    gameId    : null,
     boardSize : GRID_SIZES.normal,
+
+    moveDirection : DIRECTIONS.up,
 
     snek : null,
 
@@ -296,10 +301,14 @@ const state = Object.seal({
                 isBorder : {boolean}
             }
          */
-    ]
+    ],
+
+    gameoverIdx : null,
+
+    gameover : false
 });
 
-function createCell ({ active, idx, x, y, fud, snek, isBorder }) {
+function createCell ({ active, idx, x, y, fud, snek, leftBorder, rightBorder }) {
     return Object.seal({
         active,
         idx,
@@ -307,7 +316,9 @@ function createCell ({ active, idx, x, y, fud, snek, isBorder }) {
         y,
         fud,
         snek,
-        isBorder
+        leftBorder,
+        rightBorder,
+        borderCrossed : false
     });
 }
 
@@ -360,6 +371,40 @@ function checkBodyCollision () {
 
         return headCoords === nodeCoords;
     }, state.snek.head.next);
+}
+
+/**
+ * Check and set a flag if snek is about the cross a border
+ */
+function setBorderCrossingFlag () {
+    const snekHeadIdx = coordsToIdx(state.snek.head.x, state.snek.head.y);
+    const cell = state.cells[snekHeadIdx];
+
+    if (cell.rightBorder) {
+        state.gameoverIdx = snekHeadIdx + 1;
+    } else if (cell.leftBorder) {
+        state.gameoverIdx = snekHeadIdx - 1;
+    } else {
+        state.gameoverIdx = null;
+    }
+}
+
+function checkBorderCrossing () {
+    const snekHeadIdx = coordsToIdx(state.snek.head.x, state.snek.head.y);
+
+    // if we cross the top or bottom
+    if (!state.cells[snekHeadIdx]) {
+        return true;
+    }
+
+    // if we cross the left or right border
+    if (snekHeadIdx === state.gameoverIdx) {
+        return true;
+    }
+}
+
+function tick () {
+    state.snek.move(state.moveDirection);
 }
 
 /**
@@ -416,18 +461,36 @@ function createBoard (parent = body, gridSize = GRID_SIZES.normal) {
         board.append(cell);
 
         state.cells.push(createCell({
-            active   : false,
-            idx      : i,
+            active      : false,
+            idx         : i,
             x,
             y,
-            fud      : false,
-            snek     : false,
-            isBorder : x === 0 ||
-                y === 0 ||
-                x === rows - 1 ||
-                y === rows - 1
+            fud         : false,
+            snek        : false,
+            leftBorder  : x === 0,
+            rightBorder : x === rows - 1
         }));
     }
+}
+
+/**
+ * Create the gameover menu
+ */
+function createGameOverMenu () {
+    const overlay = $.createElement("div");
+    const text = $.createElement("h2");
+    const newGame = $.createElement("button");
+
+    text.innerText = "Game Over";
+    newGame.innerText = "New Game";
+
+    overlay.appendChild(text);
+    overlay.appendChild(newGame);
+
+    overlay.classList.add("gameover");
+    overlay.setAttribute("data-status", false);
+
+    body.appendChild(overlay);
 }
 
 function placeFud ({ eaten = false } = {}) {
@@ -483,25 +546,25 @@ window.addEventListener("keyup", (e) => {
         case "ArrowUp":
         case "W":
         case "w":
-            state.snek.move(DIRECTIONS.up);
+            state.moveDirection = DIRECTIONS.up;
 
             break;
         case "ArrowDown":
         case "S":
         case "s":
-            state.snek.move(DIRECTIONS.down);
+            state.moveDirection = DIRECTIONS.down;
 
             break;
         case "ArrowLeft":
         case "A":
         case "a":
-            state.snek.move(DIRECTIONS.left);
+            state.moveDirection = DIRECTIONS.left;
 
             break;
         case "ArrowRight":
         case "D":
         case "d":
-            state.snek.move(DIRECTIONS.right);
+            state.moveDirection = DIRECTIONS.right;
 
             break;
         default:
@@ -511,17 +574,19 @@ window.addEventListener("keyup", (e) => {
 
 window.addEventListener(EVENT_NAMES.snekmoved, () => {
     const snekHeadIdx = coordsToIdx(state.snek.head.x, state.snek.head.y);
-    const shouldUpdate = !checkBodyCollision();
+    const shouldUpdate = !checkBodyCollision() && !checkBorderCrossing();
 
-    if (shouldUpdate) {
-        state.snek.forEach((node) => {
-            // turn off old cell
-            toggleCellActivity({ x : node.prevX, y : node.prevY, type : TYPES.snek });
-
-            // turn on new cell
-            toggleCellActivity({ x : node.x, y : node.y, type : TYPES.snek });
-        });
+    if (!shouldUpdate) {
+        return window.dispatchEvent(EVENTS.gameover);
     }
+
+    state.snek.forEach((node) => {
+        // turn off old cell
+        toggleCellActivity({ x : node.prevX, y : node.prevY, type : TYPES.snek });
+
+        // turn on new cell
+        toggleCellActivity({ x : node.x, y : node.y, type : TYPES.snek });
+    });
 
     if (snekHeadIdx === state.fud.idx) {
         // turn the head back on, since the overlap turned it off
@@ -535,13 +600,7 @@ window.addEventListener(EVENT_NAMES.snekmoved, () => {
         window.dispatchEvent(EVENTS.fudfound);
     }
 
-    if (state.cells[snekHeadIdx].isBorder) {
-        console.log("about to hit wall");
-    }
-
-    if (checkBodyCollision()) {
-        console.log("hit the body");
-    }
+    setBorderCrossingFlag();
 });
 
 window.addEventListener(EVENT_NAMES.fudfound, () => {
@@ -549,10 +608,19 @@ window.addEventListener(EVENT_NAMES.fudfound, () => {
     placeFud({ eaten : true });
 });
 
+window.addEventListener(EVENT_NAMES.gameover, () => {
+    clearInterval(state.gameId);
+
+    $.getElementsByClassName("gameover")[0].setAttribute("data-status", true);
+});
+
 /**
  * Init
  */
 createLogo();
 createBoard();
+createGameOverMenu();
 createSnek();
 placeFud();
+
+state.gameId = setInterval(() => tick(), 250);
