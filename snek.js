@@ -623,4 +623,4 @@ createGameOverMenu();
 createSnek();
 placeFud();
 
-state.gameId = setInterval(() => tick(), 250);
+state.gameId = setInterval(() => tick(), 150);

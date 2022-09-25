@@ -51,6 +51,10 @@ body {
 }
 
 .gameover[data-status=true] {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items:center;
     position: absolute;
     height: 100%;
     width: 100%;
