@@ -541,30 +541,39 @@ function coordsToIdx (x, y) {
 /**
  * Event listeners
  */
+/* eslint-disable complexity */
 window.addEventListener("keyup", (e) => {
     switch (e.key) {
         case "ArrowUp":
         case "W":
         case "w":
-            state.moveDirection = DIRECTIONS.up;
+            if (state.moveDirection !== DIRECTIONS.down) {
+                state.moveDirection = DIRECTIONS.up;
+            }
 
             break;
         case "ArrowDown":
         case "S":
         case "s":
-            state.moveDirection = DIRECTIONS.down;
+            if (state.moveDirection !== DIRECTIONS.up) {
+                state.moveDirection = DIRECTIONS.down;
+            }
 
             break;
         case "ArrowLeft":
         case "A":
         case "a":
-            state.moveDirection = DIRECTIONS.left;
+            if (state.moveDirection !== DIRECTIONS.right) {
+                state.moveDirection = DIRECTIONS.left;
+            }
 
             break;
         case "ArrowRight":
         case "D":
         case "d":
-            state.moveDirection = DIRECTIONS.right;
+            if (state.moveDirection !== DIRECTIONS.left) {
+                state.moveDirection = DIRECTIONS.right;
+            }
 
             break;
         default:
