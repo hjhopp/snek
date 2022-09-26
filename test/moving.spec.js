@@ -1,13 +1,7 @@
 import { test, expect } from "@playwright/test";
 
-import { DIRECTIONS, TICK } from "./util/constants";
+import { DIRECTIONS } from "./util/constants";
 import wait from "./util/wait";
-
-async function pressKeysAndReturnFired ({ page, keys }) {
-    await Promise.all(keys.map((key) => page.keyboard.press(key)));
-
-    return page.evaluate(() => window.fired);
-}
 
 test.describe("Moving", () => {
     test.beforeEach(async ({ page }) => {
@@ -146,5 +140,47 @@ test.describe("Moving", () => {
         const { moveDirection } = await page.evaluate(() => state);
 
         await expect(moveDirection).toBe(DIRECTIONS.up);
+     });
+
+     test("Can't go right if going left", async ({ page }) => {
+        await page.keyboard.press("ArrowLeft");
+
+        await wait();
+
+        await page.keyboard.press("ArrowRight");
+
+        const { moveDirection } = await page.evaluate(() => state);
+
+        await expect(moveDirection).toBe(DIRECTIONS.left);
+     });
+
+     test("Can't go left if going right", async ({ page }) => {
+        await page.keyboard.press("ArrowRight");
+
+        await wait();
+
+        await page.keyboard.press("ArrowLeft");
+
+        const { moveDirection } = await page.evaluate(() => state);
+
+        await expect(moveDirection).toBe(DIRECTIONS.right);
+     });
+
+     test("Can't go up if going down", async ({ page }) => {
+        await page.keyboard.press("ArrowRight");
+
+        await wait();
+
+        await page.keyboard.press("ArrowDown");
+
+        await wait();
+
+        await page.keyboard.press("ArrowUp");
+
+        await wait();
+
+        const { moveDirection } = await page.evaluate(() => state);
+
+        await expect(moveDirection).toBe(DIRECTIONS.down);
      });
 });
