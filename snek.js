@@ -644,17 +644,17 @@ window.addEventListener(EVENT_NAMES.gameover, () => {
 window.addEventListener(EVENT_NAMES.restart, () => {
     // Toggle snek nodes off
     state.snek.forEach((node) => {
-        toggleCellActivity({ x : node.x, y : node.y, type : TYPES.snek });
+        toggleCellActivity({ x : node.prevX, y : node.prevY, type : TYPES.snek });
     })
 
     // Toggle fud node off
     toggleCellActivity({ idx : state.fud.idx, type : TYPES.fud });
 
-    // remove fud and snek from state
+    // // remove fud and snek from state
     state.snek = null;
-    state.fud = null;
+    state.fud = { idx : null };
 
-    // remove gameover overlay
+    // // remove gameover overlay
     toggleGameoverOverlayOn(false);
 
     start();
