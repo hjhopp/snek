@@ -2,7 +2,7 @@
     "extends" : "hjh",
     "plugins": ["use-strict"],
     "parserOptions": {
-        "ecmaVersion": "latest"
+        "ecmaVersion": 2020
     },
     "env": {
         "browser": true

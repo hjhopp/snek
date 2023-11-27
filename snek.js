@@ -1,4 +1,6 @@
 "use strict";
+/** Types */
+/** @typedef {"fud" | "snek"} NodeType */
 
 /**
  * Constants
@@ -24,13 +26,15 @@ const DIRECTIONS = {
 const EVENT_NAMES = {
     snekmoved : "snekmoved",
     fudfound  : "fudfound",
-    gameover  : "gameover"
+    gameover  : "gameover", 
+    restart   : "restart"
 };
 
 const EVENTS = {
     snekmoved : new Event(EVENT_NAMES.snekmoved),
     fudfound  : new Event(EVENT_NAMES.fudfound),
-    gameover  : new Event(EVENT_NAMES.gameover)
+    gameover  : new Event(EVENT_NAMES.gameover),
+    restart   : new Event(EVENT_NAMES.restart)
 };
 
 /**
@@ -327,22 +331,27 @@ function createCell ({ active, idx, x, y, fud, snek, leftBorder, rightBorder }) 
  */
 /**
  * Say whether a cell is active or not
- * @param {number} opts.idx - cell index
- * @param {number} opts.x - x coordinate
- * @param {number} opts.y - y coordinate
- * @param {string} type - fud | snek
+ * @param {{ x : number, y : number, idx : number, type : NodeType }} options
  */
 function toggleCellActivity ({ x, y, idx = coordsToIdx(x, y), type }) {
     const cell = document.querySelector(`[data-idx='${idx}']`);
     const toggleTo = !state.cells[idx].active;
     const otherType = type === TYPES.fud ? TYPES.snek : TYPES.fud;
 
-    cell.setAttribute("data-active", toggleTo);
+    cell.setAttribute("data-active", `${toggleTo}`);
     cell.setAttribute("data-type", toggleTo && type);
 
     state.cells[idx].active = toggleTo;
     state.cells[idx][type] = toggleTo;
     state.cells[idx][otherType] = false;
+}
+
+/** 
+ * Toggle gameover overlay 
+ * @param {boolean} on true = on, false = off
+ * */
+function toggleGameoverOverlayOn(on) {
+    $.getElementsByClassName("gameover")[0].setAttribute("data-status", `${on}`);
 }
 
 /**
@@ -407,6 +416,13 @@ function tick () {
     state.snek.move(state.moveDirection);
 }
 
+function start() {
+    createSnek();
+    placeFud();
+
+    state.gameId = setInterval(() => tick(), 150);
+}
+
 /**
  *  Component creators
  */
@@ -453,10 +469,10 @@ function createBoard (parent = body, gridSize = GRID_SIZES.normal) {
         cell.style.left = `calc(${x} * var(--cell-width))`;
         cell.style.top = `calc(${y} * var(--cell-width))`;
 
-        cell.setAttribute("data-active", false);
-        cell.setAttribute("data-idx", i);
-        cell.setAttribute("data-x", x);
-        cell.setAttribute("data-y", y);
+        cell.setAttribute("data-active", `${false}`);
+        cell.setAttribute("data-idx", `${i}`);
+        cell.setAttribute("data-x", `${x}`);
+        cell.setAttribute("data-y", `${y}`);
 
         board.append(cell);
 
@@ -484,11 +500,15 @@ function createGameOverMenu () {
     text.innerText = "Game Over";
     newGame.innerText = "New Game";
 
+    newGame.addEventListener("click", () => {
+        window.dispatchEvent(EVENTS.restart);
+    });
+
     overlay.appendChild(text);
     overlay.appendChild(newGame);
 
     overlay.classList.add("gameover");
-    overlay.setAttribute("data-status", false);
+    overlay.setAttribute("data-status", `${false}`);
 
     body.appendChild(overlay);
 }
@@ -508,9 +528,7 @@ function placeFud ({ eaten = false } = {}) {
 }
 
 function createSnek () {
-    if (!state.snek) {
-        state.snek = new LinkedList(state.boardSize);
-    }
+    state.snek = new LinkedList(state.boardSize);
 
     while (state.snek.length < STARTING_SNEK_SIZE) {
         const nodeToAddToBoard = state.snek.tail || state.snek.head;
@@ -620,7 +638,26 @@ window.addEventListener(EVENT_NAMES.fudfound, () => {
 window.addEventListener(EVENT_NAMES.gameover, () => {
     clearInterval(state.gameId);
 
-    $.getElementsByClassName("gameover")[0].setAttribute("data-status", true);
+    toggleGameoverOverlayOn(true);
+});
+
+window.addEventListener(EVENT_NAMES.restart, () => {
+    // Toggle snek nodes off
+    state.snek.forEach((node) => {
+        toggleCellActivity({ x : node.x, y : node.y, type : TYPES.snek });
+    })
+
+    // Toggle fud node off
+    toggleCellActivity({ idx : state.fud.idx, type : TYPES.fud });
+
+    // remove fud and snek from state
+    state.snek = null;
+    state.fud = null;
+
+    // remove gameover overlay
+    toggleGameoverOverlayOn(false);
+
+    start();
 });
 
 /**
@@ -629,7 +666,6 @@ window.addEventListener(EVENT_NAMES.gameover, () => {
 createLogo();
 createBoard();
 createGameOverMenu();
-createSnek();
-placeFud();
 
-state.gameId = setInterval(() => tick(), 150);
+
+start();
