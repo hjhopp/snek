@@ -59,7 +59,7 @@ class Node {
 }
 
 class LinkedList {
-    constructor (boardSize) {
+    constructor ({ boardSize, id }) {
         // make a smaller range of random numbers to choose from so snek always lands on the board
         // this is pretty handwavey, whatevs
         const smallerBoard = Math.sqrt(boardSize / 3);
@@ -69,6 +69,7 @@ class LinkedList {
         this.head = newNode;
         this.tail = null;
         this.length = 1;
+        this.id = id;
 
         this.currentNode = null;
     }
@@ -423,6 +424,15 @@ function start() {
     state.gameId = setInterval(() => tick(), 150);
 }
 
+function generateGuid() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+
+        return v.toString(16);
+    });
+};
+
 /**
  *  Component creators
  */
@@ -503,6 +513,7 @@ function createGameOverMenu () {
     newGame.addEventListener("click", () => {
         window.dispatchEvent(EVENTS.restart);
     });
+    newGame.setAttribute("data-test", "new-game");
 
     overlay.appendChild(text);
     overlay.appendChild(newGame);
@@ -528,7 +539,7 @@ function placeFud ({ eaten = false } = {}) {
 }
 
 function createSnek () {
-    state.snek = new LinkedList(state.boardSize);
+    state.snek = new LinkedList({ boardSize : state.boardSize, id : generateGuid() });
 
     while (state.snek.length < STARTING_SNEK_SIZE) {
         const nodeToAddToBoard = state.snek.tail || state.snek.head;
