@@ -650,11 +650,11 @@ window.addEventListener(EVENT_NAMES.restart, () => {
     // Toggle fud node off
     toggleCellActivity({ idx : state.fud.idx, type : TYPES.fud });
 
-    // // remove fud and snek from state
+    // remove fud and snek from state
     state.snek = null;
     state.fud = { idx : null };
 
-    // // remove gameover overlay
+    // remove gameover overlay
     toggleGameoverOverlayOn(false);
 
     start();
@@ -666,6 +666,5 @@ window.addEventListener(EVENT_NAMES.restart, () => {
 createLogo();
 createBoard();
 createGameOverMenu();
-
 
 start();
